@@ -39,6 +39,9 @@ python src/init_populate.py
    uvicorn main:app
     ```
 
+## Swagger
+http://localhost:8000/docs
+
 ## Run ruff
 ```bash
 ruff check . --fix --unsafe-fixes --preview
