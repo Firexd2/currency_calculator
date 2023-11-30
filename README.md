@@ -23,6 +23,12 @@ Ensure your environment is ready by following these steps:
      POSTGRES_URI=postgresql://postgres:postgres@localhost:5432/your_database alembic upgrade head
      ```
 
+5. **Environment Variables**
+   - Create a `.env` file in the src/ directory of the project and add the following environment variables:
+     ```bash
+     POSTGRES_URI=postgresql://postgres:postgres@localhost:5432/your_database
+     ```
+
 ## Run Populate Script
 
 To initialize the database with necessary data, execute the populate script:
