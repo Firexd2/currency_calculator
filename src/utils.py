@@ -1,7 +1,7 @@
 import heapq
 
 
-def _build_graph(rates: list) -> dict:
+def build_graph(rates: list) -> dict:
     graph = {}
     for rate in rates:
         base_currency, target_currency = rate.name.split("/")
@@ -20,7 +20,7 @@ def _build_graph(rates: list) -> dict:
     return graph
 
 
-def _find_shortest_path(graph: dict, start: str, end: str) -> list[str] | None:
+def find_shortest_path(graph: dict, start: str, end: str) -> list[str] | None:
     """
     dijkstra's algorithm
     """
@@ -56,7 +56,7 @@ def _find_shortest_path(graph: dict, start: str, end: str) -> list[str] | None:
     return None
 
 
-def _calculate_combined_rate(path: list, graph: dict) -> float:
+def calculate_combined_rate(path: list, graph: dict) -> float:
     rate = 1
     for i in range(len(path) - 1):
         rate *= graph[path[i]][path[i + 1]]

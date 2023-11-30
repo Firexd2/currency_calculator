@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class CurrencyPair(str):
-
     @classmethod
     def validate(cls, value: str) -> str:
         if not bool(re.match(r"^[A-Z]{3}\/[A-Z]{3}$", value)):
@@ -16,13 +15,10 @@ class CurrencyPair(str):
         return value
 
     def __get_pydantic_core_schema__(self) -> dict:
-        return {
-            "type": "str",
-        }
+        return {"type": "str"}
 
 
 class StringDate(str):
-
     @classmethod
     def validate(cls, value: str) -> str:
         try:
@@ -34,9 +30,7 @@ class StringDate(str):
         return value
 
     def __get_pydantic_core_schema__(self) -> dict:
-        return {
-            "type": "str",
-        }
+        return {"type": "str"}
 
 
 class ExchangeRateCreate(BaseModel):
@@ -85,14 +79,17 @@ class ExchangeRate(BaseModel):
 
 
 class CalculatedRateResponse(BaseModel):
-    date: datetime
+    date: datetime | StringDate
     name: CurrencyPair
     rate: Decimal
 
     @field_validator("date")
     @classmethod
-    def format_date(cls, value: datetime) -> str:
-        return value.strftime("%Y.%m.%d")
+    def format_date(cls, value: datetime | StringDate) -> str:
+        if isinstance(value, datetime):
+            return value.strftime("%Y.%m.%d")
+
+        return value
 
     @field_validator("name")
     @classmethod

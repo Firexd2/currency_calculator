@@ -1,4 +1,3 @@
-from datetime import UTC, datetime
 from typing import Annotated
 
 from database import models
@@ -7,21 +6,23 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.params import Query
 from models import CalculatedRateResponse, ExchangeRate, ExchangeRateCreate
 from sqlalchemy.orm import Session
-from utils import _build_graph, _calculate_combined_rate, _find_shortest_path
+from utils import build_graph, calculate_combined_rate, find_shortest_path
 
 app = FastAPI()
+
 
 CURRENCY_PAIR_ANNOTATION = Annotated[
     str, Query(min_length=3, max_length=7, regex="^[A-Z]{3}/[A-Z]{3}$", example="USD/EUR")
 ]
+DATE_ANNOTATION = Annotated[
+    str, Query(min_length=3, max_length=50, regex=r"^\d{4}\.\d{2}\.\d{2}$", example="2023.11.29")
+]
+
 
 @app.get("/exchange_rates/calculate", tags=["calculate"])
 def calculate_exchange_rate(
-    date: Annotated[
-        str, Query(min_length=3, max_length=50, regex=r"^\d{4}\.\d{2}\.\d{2}$", example="2023.11.29")
-    ], currency_pair: CURRENCY_PAIR_ANNOTATION, db: Session = Depends(get_db)
+    date: DATE_ANNOTATION, currency_pair: CURRENCY_PAIR_ANNOTATION, db: Session = Depends(get_db)
 ) -> CalculatedRateResponse:
-
     # first, try to find a direct rate
     direct_rate = (
         db.query(models.DailyExchangeRates)
@@ -40,7 +41,7 @@ def calculate_exchange_rate(
         .filter(
             models.DailyExchangeRates.name == f"{target_currency}/{base_currency}",
             models.DailyExchangeRates.date == date,
-            )
+        )
         .first()
     )
 
@@ -51,14 +52,12 @@ def calculate_exchange_rate(
 
     # get the most profitable rate using Dijkstra's algorithm
     all_rates = db.query(models.DailyExchangeRates).filter(models.DailyExchangeRates.date == date).all()
-    graph = _build_graph(all_rates)
-    shortest_path = _find_shortest_path(graph, base_currency, target_currency)
+    graph = build_graph(all_rates)
+    shortest_path = find_shortest_path(graph, base_currency, target_currency)
     if shortest_path:
-        rate = _calculate_combined_rate(shortest_path, graph)
+        rate = calculate_combined_rate(shortest_path, graph)
 
-        return CalculatedRateResponse(
-            date=datetime.strptime(date, "%Y.%m.%d").replace(tzinfo=UTC), name=currency_pair, rate=rate
-        )
+        return CalculatedRateResponse(date=date, name=currency_pair, rate=rate)
 
     # if no rate can be calculated
     raise HTTPException(status_code=404, detail="Rate cannot be determined")
